@@ -1,0 +1,58 @@
+schema: spec-driven
+project: tracker
+
+context: |
+  Project: Job Application Tracker — local desktop tool, no authentication.
+  Backend: FastAPI + SQLite (aiosqlite) — single tracker.db file, Python 3.12+.
+  Frontend: React 19 + Vite + TanStack Query v5 + Tailwind v4 + shadcn/ui.
+  Architecture: backend/ (main.py, models.py, database.py) + frontend/src/ (api/, components/).
+  Style: Navy primary (#1E3A5F), white surface cards, status-colored pills.
+  Run: uvicorn main:app --reload (port 8000) + npm run dev (port 5173, proxy /api → 8000).
+
+testing:
+  strict_tdd: false
+  reason: "Fresh project — no test runner configured yet. No pyproject.toml, pytest.ini, or vitest.config found."
+  backend:
+    runner: pytest
+    available: false
+    command: ""
+  frontend:
+    runner: vitest
+    available: false
+    command: ""
+  layers:
+    unit: false
+    integration: false
+    e2e: false
+  coverage:
+    available: false
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Note impact on data model migrations (SQLite ALTER TABLE limitations)
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+    - Reference application status enum: aplicado | dm_enviado | en_contacto | entrevista | prueba_tecnica | oferta | rechazado | sin_respuesta
+  design:
+    - Include sequence diagrams for API ↔ frontend flows
+    - Document TanStack Query keys and invalidation strategy
+    - Document aiosqlite async patterns
+  tasks:
+    - Group by phase (backend → frontend → integration)
+    - Keep tasks completable in one session
+    - Use hierarchical numbering
+  apply:
+    - Follow FastAPI async patterns with aiosqlite
+    - TanStack Query v5 uses object-form queryOptions
+    - Tailwind v4 uses @import "tailwindcss" (no config file needed)
+    - shadcn/ui components via `npx shadcn@latest add`
+    tdd: false
+    test_command: ""
+  verify:
+    test_command: ""
+    build_command: "cd frontend && npm run build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas to main specs
