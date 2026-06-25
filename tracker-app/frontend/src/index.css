@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme {
+  --color-navy: #1e3a5f;
+  --color-background: #f3f6fa;
+  --color-border: #e5e7eb;
+
+  /* Status colors */
+  --color-status-aplicado-bg: #eff6ff;
+  --color-status-aplicado-text: #1d4ed8;
+  --color-status-dm_enviado-bg: #f5f3ff;
+  --color-status-dm_enviado-text: #5b21b6;
+  --color-status-en_contacto-bg: #fffbeb;
+  --color-status-en_contacto-text: #92400e;
+  --color-status-entrevista-bg: #fff7ed;
+  --color-status-entrevista-text: #9a3412;
+  --color-status-prueba_tecnica-bg: #fff7ed;
+  --color-status-prueba_tecnica-text: #ea580c;
+  --color-status-oferta-bg: #ecfdf5;
+  --color-status-oferta-text: #065f46;
+  --color-status-rechazado-bg: #fef2f2;
+  --color-status-rechazado-text: #991b1b;
+  --color-status-sin_respuesta-bg: #f9fafb;
+  --color-status-sin_respuesta-text: #374151;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #f3f6fa;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
