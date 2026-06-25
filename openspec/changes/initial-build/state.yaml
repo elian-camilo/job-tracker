@@ -1,5 +1,5 @@
 change: initial-build
-status: applied
-phases_complete: [explore, propose, spec, design, tasks, apply]
+status: verified
+phases_complete: [explore, propose, spec, design, tasks, apply, verify]
 artifact_store: openspec
 created_at: 2026-06-25
