@@ -16,9 +16,24 @@ export interface ApplicationIn {
   contacto?: string | null;
   proximo_paso?: string | null;
   notas?: string | null;
+  cv_file?: string | null;
+  link?: string | null;
+  salario_promedio?: string | null;
 }
 
 export interface ApplicationOut extends ApplicationIn {
+  id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface WishlistItemIn {
+  nombre: string;
+  link?: string | null;
+  notas?: string | null;
+}
+
+export interface WishlistItemOut extends WishlistItemIn {
   id: string;
   created_at: string;
   updated_at: string;

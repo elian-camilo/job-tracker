@@ -30,9 +30,26 @@ class ApplicationIn(BaseModel):
     contacto: str | None = None
     proximo_paso: str | None = None
     notas: str | None = None
+    cv_file: str | None = None
+    link: str | None = None
+    salario_promedio: str | None = None
 
 
 class ApplicationOut(ApplicationIn):
+    id: str
+    created_at: str
+    updated_at: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class WishlistItemIn(BaseModel):
+    nombre: str
+    link: str | None = None
+    notas: str | None = None
+
+
+class WishlistItemOut(WishlistItemIn):
     id: str
     created_at: str
     updated_at: str

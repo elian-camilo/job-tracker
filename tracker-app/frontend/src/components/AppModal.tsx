@@ -1,6 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "@/hooks/useForm";
-import { useCreateApp, useUpdateApp } from "@/api/hooks";
+import { useCreateApp, useUpdateApp, useUploadCV } from "@/api/hooks";
 import type { ApplicationOut, ApplicationIn, Plataforma } from "@/api/types";
 import { STATUS_ORDER, STATUS_LABELS, type Estado } from "@/constants/status";
 
@@ -16,6 +16,8 @@ interface AppModalProps {
   isOpen: boolean;
   onClose: () => void;
   editingApp: ApplicationOut | null;
+  prefillData?: Partial<ApplicationIn> | null;
+  onAppCreated?: () => void;
 }
 
 const EMPTY_FORM: ApplicationIn = {
@@ -27,16 +29,28 @@ const EMPTY_FORM: ApplicationIn = {
   contacto: null,
   proximo_paso: null,
   notas: null,
+  cv_file: null,
+  link: null,
+  salario_promedio: null,
 };
 
-export function AppModal({ isOpen, onClose, editingApp }: AppModalProps) {
+export function AppModal({
+  isOpen,
+  onClose,
+  editingApp,
+  prefillData,
+  onAppCreated,
+}: AppModalProps) {
   const createApp = useCreateApp();
   const updateApp = useUpdateApp();
+  const uploadCV = useUploadCV();
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { values, setField, reset, errors, validate } =
     useForm<ApplicationIn>(EMPTY_FORM);
 
-  // Pre-fill when editing
+  // Pre-fill when editing or promoting from wishlist
   useEffect(() => {
     if (editingApp) {
       reset({
@@ -48,11 +62,19 @@ export function AppModal({ isOpen, onClose, editingApp }: AppModalProps) {
         contacto: editingApp.contacto ?? null,
         proximo_paso: editingApp.proximo_paso ?? null,
         notas: editingApp.notas ?? null,
+        cv_file: editingApp.cv_file ?? null,
+        link: editingApp.link ?? null,
+        salario_promedio: editingApp.salario_promedio ?? null,
+      });
+    } else if (prefillData) {
+      reset({
+        ...EMPTY_FORM,
+        ...prefillData,
       });
     } else {
       reset(EMPTY_FORM);
     }
-  }, [editingApp, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [editingApp, prefillData, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!isOpen) return null;
 
@@ -70,6 +92,9 @@ export function AppModal({ isOpen, onClose, editingApp }: AppModalProps) {
       contacto: values.contacto || null,
       proximo_paso: values.proximo_paso || null,
       notas: values.notas || null,
+      cv_file: values.cv_file || null,
+      link: values.link || null,
+      salario_promedio: values.salario_promedio || null,
     };
 
     if (editingApp) {
@@ -78,16 +103,32 @@ export function AppModal({ isOpen, onClose, editingApp }: AppModalProps) {
         { onSuccess: onClose }
       );
     } else {
-      createApp.mutate(payload, { onSuccess: onClose });
+      createApp.mutate(payload, {
+        onSuccess: () => {
+          onClose();
+          if (onAppCreated) onAppCreated();
+        },
+      });
     }
   }
 
-  const isPending = createApp.isPending || updateApp.isPending;
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    try {
+      const res = await uploadCV.mutateAsync(file);
+      setField("cv_file", res.filename);
+    } catch (err) {
+      alert("Error subiendo el CV");
+    }
+  };
+
+  const isPending = createApp.isPending || updateApp.isPending || uploadCV.isPending;
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-      onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="w-full max-w-lg rounded-[10px] border border-[#E5E7EB] bg-white p-6 shadow-xl">
         <div className="mb-5 flex items-center justify-between">
@@ -135,6 +176,34 @@ export function AppModal({ isOpen, onClose, editingApp }: AppModalProps) {
             {errors.rol && (
               <p className="mt-1 text-xs text-red-500">{errors.rol}</p>
             )}
+          </div>
+
+          {/* Link */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700">
+              Link de la oferta
+            </label>
+            <input
+              type="url"
+              value={values.link ?? ""}
+              onChange={(e) => setField("link", e.target.value)}
+              className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm focus:border-[#1E3A5F] focus:outline-none"
+              placeholder="Ej: https://..."
+            />
+          </div>
+
+          {/* Salario Promedio */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700">
+              Salario promedio
+            </label>
+            <input
+              type="text"
+              value={values.salario_promedio ?? ""}
+              onChange={(e) => setField("salario_promedio", e.target.value)}
+              className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm focus:border-[#1E3A5F] focus:outline-none"
+              placeholder="Ej: $3000 USD (opcional)"
+            />
           </div>
 
           {/* Plataforma + Fecha */}
@@ -242,6 +311,45 @@ export function AppModal({ isOpen, onClose, editingApp }: AppModalProps) {
               className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm focus:border-[#1E3A5F] focus:outline-none"
               placeholder="Notas adicionales..."
             />
+          </div>
+
+          {/* CV Upload */}
+          <div>
+            <label className="mb-1 block text-xs font-medium text-gray-700">
+              CV personalizado (PDF)
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={handleFileChange}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="rounded-md border border-gray-300 bg-white px-3 py-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50"
+                disabled={uploadCV.isPending}
+              >
+                {uploadCV.isPending ? "Subiendo..." : "Seleccionar PDF"}
+              </button>
+              
+              {values.cv_file && (
+                <div className="flex items-center gap-2 overflow-hidden">
+                  <span className="truncate text-xs text-emerald-600">
+                    ✓ {values.cv_file.split("_").slice(1).join("_")}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setField("cv_file", null)}
+                    className="text-xs text-red-500 hover:text-red-700"
+                  >
+                    Quitar
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Actions */}

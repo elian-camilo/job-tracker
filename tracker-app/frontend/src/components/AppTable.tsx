@@ -2,6 +2,8 @@ import type { ApplicationOut } from "@/api/types";
 import { useCycleStatus, useDeleteApp } from "@/api/hooks";
 import { StatusBadge } from "./StatusBadge";
 import type { Estado } from "@/constants/status";
+import { CVViewerModal } from "./CVViewerModal";
+import { useState } from "react";
 
 interface AppTableProps {
   applications: ApplicationOut[];
@@ -17,6 +19,7 @@ const STALE_STATUSES: Estado[] = ["aplicado", "dm_enviado"];
 export function AppTable({ applications, onEdit }: AppTableProps) {
   const cycleStatus = useCycleStatus();
   const deleteApp = useDeleteApp();
+  const [viewCvFilename, setViewCvFilename] = useState<string | null>(null);
 
   function handleDelete(id: string, empresa: string) {
     if (window.confirm(`¿Eliminar la aplicación en ${empresa}?`)) {
@@ -25,12 +28,14 @@ export function AppTable({ applications, onEdit }: AppTableProps) {
   }
 
   return (
-    <div className="overflow-hidden rounded-[10px] border border-[#E5E7EB] bg-white">
+    <>
+      <div className="overflow-hidden rounded-[10px] border border-[#E5E7EB] bg-white">
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-[#E5E7EB] text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
             <th className="px-4 py-3">Empresa / Rol</th>
             <th className="px-4 py-3">Plataforma</th>
+            <th className="px-4 py-3">Salario</th>
             <th className="px-4 py-3">Días</th>
             <th className="px-4 py-3">Estado</th>
             <th className="px-4 py-3">Próximo paso</th>
@@ -49,11 +54,27 @@ export function AppTable({ applications, onEdit }: AppTableProps) {
                 className="border-b border-[#E5E7EB] last:border-0 hover:bg-gray-50"
               >
                 <td className="px-4 py-3">
-                  <div className="font-medium text-gray-900">{app.empresa}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="font-medium text-gray-900">{app.empresa}</div>
+                    {app.link && (
+                      <a
+                        href={app.link}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-xs text-blue-600 hover:text-blue-800"
+                        title="Ver oferta"
+                      >
+                        🔗
+                      </a>
+                    )}
+                  </div>
                   <div className="text-xs text-gray-500">{app.rol}</div>
                 </td>
                 <td className="px-4 py-3 text-gray-600">
                   {app.plataforma ?? "—"}
+                </td>
+                <td className="px-4 py-3 text-gray-600">
+                  {app.salario_promedio || "no especificado"}
                 </td>
                 <td
                   className={`px-4 py-3 ${
@@ -78,6 +99,9 @@ export function AppTable({ applications, onEdit }: AppTableProps) {
                           contacto: app.contacto ?? undefined,
                           proximo_paso: app.proximo_paso ?? undefined,
                           notas: app.notas ?? undefined,
+                          cv_file: app.cv_file ?? undefined,
+                          link: app.link ?? undefined,
+                          salario_promedio: app.salario_promedio ?? undefined,
                         },
                       });
                     }}
@@ -88,6 +112,14 @@ export function AppTable({ applications, onEdit }: AppTableProps) {
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
+                    {app.cv_file && (
+                      <button
+                        onClick={() => setViewCvFilename(app.cv_file!)}
+                        className="rounded px-2 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50"
+                      >
+                        Ver CV
+                      </button>
+                    )}
                     <button
                       onClick={() => onEdit(app)}
                       className="rounded px-2 py-1 text-xs font-medium text-[#1E3A5F] hover:bg-blue-50"
@@ -108,5 +140,11 @@ export function AppTable({ applications, onEdit }: AppTableProps) {
         </tbody>
       </table>
     </div>
+    
+    <CVViewerModal
+      cvFilename={viewCvFilename}
+      onClose={() => setViewCvFilename(null)}
+    />
+    </>
   );
 }

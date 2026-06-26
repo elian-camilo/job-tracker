@@ -5,7 +5,13 @@ import {
   type QueryClient,
 } from "@tanstack/react-query";
 import { apiFetch } from "./client";
-import type { ApplicationIn, ApplicationOut, StatsOut } from "./types";
+import type {
+  ApplicationIn,
+  ApplicationOut,
+  StatsOut,
+  WishlistItemIn,
+  WishlistItemOut,
+} from "./types";
 
 const APPS_KEY = ["applications"] as const;
 const STATS_KEY = ["stats"] as const;
@@ -93,5 +99,76 @@ export function useCycleStatus() {
       }
     },
     onSettled: () => invalidateBothKeys(qc),
+  });
+}
+
+export function useUploadCV() {
+  return useMutation<{ filename: string }, Error, File>({
+    mutationFn: async (file) => {
+      const formData = new FormData();
+      formData.append("file", file);
+      // Fetch directly to avoid JSON headers in apiFetch if it enforces them
+      const res = await fetch("/api/upload-cv", {
+        method: "POST",
+        body: formData,
+      });
+      if (!res.ok) {
+        throw new Error("Upload failed");
+      }
+      return res.json();
+    },
+  });
+}
+
+const WISHLIST_KEY = ["wishlist"] as const;
+
+export function useWishlist() {
+  return useQuery<WishlistItemOut[]>({
+    queryKey: WISHLIST_KEY,
+    queryFn: () => apiFetch<WishlistItemOut[]>("/wishlist"),
+    staleTime: 0,
+  });
+}
+
+export function useCreateWishlistItem() {
+  const qc = useQueryClient();
+  return useMutation<WishlistItemOut, Error, WishlistItemIn>({
+    mutationFn: (data) =>
+      apiFetch<WishlistItemOut>("/wishlist", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: WISHLIST_KEY });
+    },
+  });
+}
+
+export function useUpdateWishlistItem() {
+  const qc = useQueryClient();
+  return useMutation<
+    WishlistItemOut,
+    Error,
+    { id: string; data: WishlistItemIn }
+  >({
+    mutationFn: ({ id, data }) =>
+      apiFetch<WishlistItemOut>(`/wishlist/${id}`, {
+        method: "PUT",
+        body: JSON.stringify(data),
+      }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: WISHLIST_KEY });
+    },
+  });
+}
+
+export function useDeleteWishlistItem() {
+  const qc = useQueryClient();
+  return useMutation<void, Error, string>({
+    mutationFn: (id) =>
+      apiFetch<void>(`/wishlist/${id}`, { method: "DELETE" }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: WISHLIST_KEY });
+    },
   });
 }
