@@ -24,6 +24,7 @@ async def init_db() -> None:
                 cv_file          TEXT,
                 link             TEXT,
                 salario_promedio TEXT,
+                favorito         INTEGER DEFAULT 0,
                 created_at       DATETIME DEFAULT (datetime('now')),
                 updated_at       DATETIME DEFAULT (datetime('now'))
             )
@@ -54,6 +55,8 @@ async def init_db() -> None:
                 await db.execute("ALTER TABLE applications ADD COLUMN link TEXT")
             if "salario_promedio" not in col_names:
                 await db.execute("ALTER TABLE applications ADD COLUMN salario_promedio TEXT")
+            if "favorito" not in col_names:
+                await db.execute("ALTER TABLE applications ADD COLUMN favorito INTEGER DEFAULT 0")
         
         await db.commit()
 
@@ -85,9 +88,9 @@ async def create_application(data: ApplicationIn, app_id: str) -> dict:
             """
             INSERT INTO applications
                 (id, empresa, rol, plataforma, fecha, contacto,
-                 estado, proximo_paso, notas, cv_file, link, salario_promedio, created_at, updated_at)
+                 estado, proximo_paso, notas, cv_file, link, salario_promedio, favorito, created_at, updated_at)
             VALUES
-                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+                (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
             """,
             (
                 app_id,
@@ -102,6 +105,7 @@ async def create_application(data: ApplicationIn, app_id: str) -> dict:
                 data.cv_file,
                 data.link,
                 data.salario_promedio,
+                1 if data.favorito else 0,
             ),
         )
         await db.commit()
@@ -130,6 +134,7 @@ async def update_application(id: str, data: ApplicationIn) -> dict | None:
                 cv_file          = ?,
                 link             = ?,
                 salario_promedio = ?,
+                favorito         = ?,
                 updated_at       = datetime('now')
             WHERE id = ?
             """,
@@ -145,6 +150,7 @@ async def update_application(id: str, data: ApplicationIn) -> dict | None:
                 data.cv_file,
                 data.link,
                 data.salario_promedio,
+                1 if data.favorito else 0,
                 id,
             ),
         )

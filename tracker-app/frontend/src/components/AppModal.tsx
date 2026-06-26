@@ -20,6 +20,14 @@ interface AppModalProps {
   onAppCreated?: () => void;
 }
 
+function getLocalDateString(): string {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+}
+
 const EMPTY_FORM: ApplicationIn = {
   empresa: "",
   rol: "",
@@ -32,6 +40,7 @@ const EMPTY_FORM: ApplicationIn = {
   cv_file: null,
   link: null,
   salario_promedio: null,
+  favorito: false,
 };
 
 export function AppModal({
@@ -65,14 +74,19 @@ export function AppModal({
         cv_file: editingApp.cv_file ?? null,
         link: editingApp.link ?? null,
         salario_promedio: editingApp.salario_promedio ?? null,
+        favorito: editingApp.favorito ?? false,
       });
     } else if (prefillData) {
       reset({
         ...EMPTY_FORM,
+        fecha: getLocalDateString(),
         ...prefillData,
       });
     } else {
-      reset(EMPTY_FORM);
+      reset({
+        ...EMPTY_FORM,
+        fecha: getLocalDateString(),
+      });
     }
   }, [editingApp, prefillData, isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -95,6 +109,7 @@ export function AppModal({
       cv_file: values.cv_file || null,
       link: values.link || null,
       salario_promedio: values.salario_promedio || null,
+      favorito: !!values.favorito,
     };
 
     if (editingApp) {
@@ -204,6 +219,20 @@ export function AppModal({
               className="w-full rounded-md border border-[#E5E7EB] px-3 py-2 text-sm focus:border-[#1E3A5F] focus:outline-none"
               placeholder="Ej: $3000 USD (opcional)"
             />
+          </div>
+
+          {/* Destacar / Favorito */}
+          <div className="flex items-center gap-2 mt-1 mb-2">
+            <input
+              type="checkbox"
+              id="favorito"
+              checked={values.favorito ?? false}
+              onChange={(e) => setField("favorito", e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300 text-[#1E3A5F] focus:ring-[#1E3A5F]"
+            />
+            <label htmlFor="favorito" className="text-xs font-semibold text-[#1E3A5F] select-none cursor-pointer flex items-center gap-1">
+              <span>★</span> Destacar esta postulación (favorito)
+            </label>
           </div>
 
           {/* Plataforma + Fecha */}

@@ -33,6 +33,8 @@ class ApplicationIn(BaseModel):
     cv_file: str | None = None
     link: str | None = None
     salario_promedio: str | None = None
+    favorito: bool = False
+
 
 
 class ApplicationOut(ApplicationIn):

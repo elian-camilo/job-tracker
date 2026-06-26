@@ -19,6 +19,7 @@ export interface ApplicationIn {
   cv_file?: string | null;
   link?: string | null;
   salario_promedio?: string | null;
+  favorito?: boolean;
 }
 
 export interface ApplicationOut extends ApplicationIn {

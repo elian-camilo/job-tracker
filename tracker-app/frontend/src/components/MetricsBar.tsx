@@ -24,7 +24,7 @@ function MetricCard({ label, value }: MetricCardProps) {
 
 export function MetricsBar({ stats }: MetricsBarProps) {
   return (
-    <div className="flex gap-4">
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-2 xl:grid-cols-4">
       <MetricCard label="Total aplicadas" value={stats.total} />
       <MetricCard
         label="Tasa de respuesta"

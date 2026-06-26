@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   useApplications,
@@ -14,6 +14,7 @@ import { AppTable } from "@/components/AppTable";
 import { AppModal } from "@/components/AppModal";
 import { WishlistTable } from "@/components/WishlistTable";
 import { WishlistModal } from "@/components/WishlistModal";
+import { ContributionGraph } from "@/components/ContributionGraph";
 
 const queryClient = new QueryClient();
 
@@ -23,8 +24,39 @@ function AppContent() {
   const { data: wishlistItems = [] } = useWishlist();
   const deleteWishlistItem = useDeleteWishlistItem();
 
-  const [activeTab, setActiveTab] = useState<"aplicaciones" | "wishlist">("aplicaciones");
+  const [activeTab, setActiveTab] = useState<"aplicaciones" | "wishlist" | "actividad">("aplicaciones");
   const [activeFilter, setActiveFilter] = useState<string>("todas");
+
+  // Compute applications of today and this week
+  const { appsToday, appsThisWeek } = useMemo(() => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, "0");
+    const dd = String(today.getDate()).padStart(2, "0");
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay()); // Sunday as start of week
+
+    let todayCount = 0;
+    let weekCount = 0;
+
+    applications.forEach((app) => {
+      if (app.fecha) {
+        const appDateStr = app.fecha.slice(0, 10);
+        if (appDateStr === todayStr) {
+          todayCount++;
+        }
+        const appDate = new Date(appDateStr + "T00:00:00");
+        if (appDate >= startOfWeek) {
+          weekCount++;
+        }
+      }
+    });
+
+    return { appsToday: todayCount, appsThisWeek: weekCount };
+  }, [applications]);
   const [editingApp, setEditingApp] = useState<ApplicationOut | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -114,14 +146,15 @@ function AppContent() {
             Seguimiento de aplicaciones laborales
           </p>
         </div>
-        {activeTab === "aplicaciones" ? (
+        {activeTab === "aplicaciones" && (
           <button
             onClick={openAdd}
             className="rounded-md bg-[#1E3A5F] px-4 py-2 text-sm font-medium text-white hover:bg-[#162d4a]"
           >
             + Nueva aplicación
           </button>
-        ) : (
+        )}
+        {activeTab === "wishlist" && (
           <button
             onClick={openAddWishlist}
             className="rounded-md bg-[#1E3A5F] px-4 py-2 text-sm font-medium text-white hover:bg-[#162d4a]"
@@ -154,10 +187,20 @@ function AppContent() {
           >
             Propuestas Guardadas ({wishlistItems.length})
           </button>
+          <button
+            onClick={() => setActiveTab("actividad")}
+            className={`border-b-2 py-4 px-1 text-sm font-semibold transition-all ${
+              activeTab === "actividad"
+                ? "border-[#1E3A5F] text-[#1E3A5F]"
+                : "border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700"
+            }`}
+          >
+            Actividad
+          </button>
         </nav>
       </div>
 
-      {activeTab === "aplicaciones" ? (
+      {activeTab === "aplicaciones" && (
         <>
           {/* Metrics */}
           {stats && (
@@ -165,6 +208,22 @@ function AppContent() {
               <MetricsBar stats={stats} />
             </div>
           )}
+
+          {/* Resumen de actividad reciente */}
+          <div className="mb-6 rounded-[10px] border border-[#E2E8F0] bg-white px-5 py-3.5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between text-xs sm:text-sm gap-2">
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-gray-600">
+              <span className="font-semibold text-[#1E3A5F]">Actividad reciente:</span>
+              <span>Hoy enviaste <strong className="text-[#2F855A] font-bold">{appsToday}</strong> {appsToday === 1 ? "propuesta" : "propuestas"}</span>
+              <span className="text-gray-300 hidden sm:inline">|</span>
+              <span>Esta semana enviaste <strong className="text-[#2F855A] font-bold">{appsThisWeek}</strong> {appsThisWeek === 1 ? "propuesta" : "propuestas"}</span>
+            </div>
+            <button
+              onClick={() => setActiveTab("actividad")}
+              className="text-[#1E3A5F] font-semibold hover:underline flex items-center gap-1 text-xs mt-1 sm:mt-0"
+            >
+              Ver calendario completo &rarr;
+            </button>
+          </div>
 
           {/* Follow-up alert */}
           {stats && stats.need_followup.length > 0 && (
@@ -214,12 +273,20 @@ function AppContent() {
             <AppTable applications={filteredApps} onEdit={openEdit} />
           )}
         </>
-      ) : (
+      )}
+
+      {activeTab === "wishlist" && (
         <WishlistTable
           items={wishlistItems}
           onEdit={openEditWishlist}
           onPromote={handlePromoteWishlist}
         />
+      )}
+
+      {activeTab === "actividad" && (
+        <div className="mx-auto max-w-md">
+          <ContributionGraph applications={applications} />
+        </div>
       )}
 
       {/* Application Modal */}

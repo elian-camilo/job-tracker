@@ -1,5 +1,5 @@
 import type { ApplicationOut } from "@/api/types";
-import { useCycleStatus, useDeleteApp } from "@/api/hooks";
+import { useCycleStatus, useDeleteApp, useUpdateApp } from "@/api/hooks";
 import { StatusBadge } from "./StatusBadge";
 import type { Estado } from "@/constants/status";
 import { CVViewerModal } from "./CVViewerModal";
@@ -19,6 +19,7 @@ const STALE_STATUSES: Estado[] = ["aplicado", "dm_enviado"];
 export function AppTable({ applications, onEdit }: AppTableProps) {
   const cycleStatus = useCycleStatus();
   const deleteApp = useDeleteApp();
+  const updateApp = useUpdateApp();
   const [viewCvFilename, setViewCvFilename] = useState<string | null>(null);
 
   function handleDelete(id: string, empresa: string) {
@@ -26,6 +27,14 @@ export function AppTable({ applications, onEdit }: AppTableProps) {
       deleteApp.mutate(id);
     }
   }
+  const sortedApplications = [...applications].sort((a, b) => {
+    const aFav = a.favorito ? 1 : 0;
+    const bFav = b.favorito ? 1 : 0;
+    if (aFav !== bFav) {
+      return bFav - aFav;
+    }
+    return Date.parse(b.fecha) - Date.parse(a.fecha);
+  });
 
   return (
     <>
@@ -43,7 +52,7 @@ export function AppTable({ applications, onEdit }: AppTableProps) {
           </tr>
         </thead>
         <tbody>
-          {applications.map((app) => {
+          {sortedApplications.map((app) => {
             const days = daysAgo(app.fecha);
             const isStale =
               STALE_STATUSES.includes(app.estado as Estado) && days >= 7;
@@ -55,6 +64,35 @@ export function AppTable({ applications, onEdit }: AppTableProps) {
               >
                 <td className="px-4 py-3">
                   <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => {
+                        updateApp.mutate({
+                          id: app.id,
+                          data: {
+                            empresa: app.empresa,
+                            rol: app.rol,
+                            fecha: app.fecha,
+                            estado: app.estado as Estado,
+                            plataforma: app.plataforma ?? undefined,
+                            contacto: app.contacto ?? undefined,
+                            proximo_paso: app.proximo_paso ?? undefined,
+                            notas: app.notas ?? undefined,
+                            cv_file: app.cv_file ?? undefined,
+                            link: app.link ?? undefined,
+                            salario_promedio: app.salario_promedio ?? undefined,
+                            favorito: !app.favorito,
+                          },
+                        });
+                      }}
+                      className={`text-lg transition-all duration-200 hover:scale-120 focus:outline-hidden ${
+                        app.favorito
+                          ? "text-amber-400 scale-110 font-bold"
+                          : "text-gray-300 hover:text-gray-400"
+                      }`}
+                      title={app.favorito ? "Quitar destacado" : "Destacar postulación"}
+                    >
+                      ★
+                    </button>
                     <div className="font-medium text-gray-900">{app.empresa}</div>
                     {app.link && (
                       <a
@@ -68,7 +106,7 @@ export function AppTable({ applications, onEdit }: AppTableProps) {
                       </a>
                     )}
                   </div>
-                  <div className="text-xs text-gray-500">{app.rol}</div>
+                  <div className="text-xs text-gray-500 pl-6">{app.rol}</div>
                 </td>
                 <td className="px-4 py-3 text-gray-600">
                   {app.plataforma ?? "—"}
@@ -102,6 +140,7 @@ export function AppTable({ applications, onEdit }: AppTableProps) {
                           cv_file: app.cv_file ?? undefined,
                           link: app.link ?? undefined,
                           salario_promedio: app.salario_promedio ?? undefined,
+                          favorito: app.favorito,
                         },
                       });
                     }}
