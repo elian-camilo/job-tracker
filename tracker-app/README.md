@@ -1,7 +1,7 @@
 # Job Tracker
 
 A local desktop-friendly web app to track your remote job applications.
-No authentication required — runs entirely on your machine.
+No authentication required: runs entirely on your machine.
 
 ## Prerequisites
 
@@ -36,13 +36,13 @@ The frontend will be available at `http://localhost:5173`.
 
 ## Features
 
-- **Application table** — 6 columns: Empresa/Rol, Plataforma, Días, Estado, Próximo paso, Acciones
-- **Status cycle** — Click the status badge to cycle through 8 statuses with optimistic updates
-- **Metrics bar** — Total aplicadas, Tasa de respuesta, Entrevistas activas, Ofertas
-- **Follow-up alert** — Yellow banner when applications in `aplicado`/`dm_enviado` have been waiting 7+ days
-- **Filter tabs** — Filter by status; only statuses with applications are shown
-- **Add / Edit modal** — Form with all fields; empresa and rol are required
-- **Delete confirmation** — Confirmation dialog before deleting
+- **Application table**: 6 columns: Empresa/Rol, Plataforma, Días, Estado, Próximo paso, Acciones
+- **Status cycle**: Click the status badge to cycle through 8 statuses with optimistic updates
+- **Metrics bar**: Total aplicadas, Tasa de respuesta, Entrevistas activas, Ofertas
+- **Follow-up alert**: Yellow banner when applications in `aplicado`/`dm_enviado` have been waiting 7+ days
+- **Filter tabs**: Filter by status; only statuses with applications are shown
+- **Add / Edit modal**: Form with all fields; empresa and rol are required
+- **Delete confirmation**: Confirmation dialog before deleting
 
 ## Tech Stack
 

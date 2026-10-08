@@ -1,7 +1,7 @@
 # Job Tracker
 
 A local desktop app to track job applications during an active 
-remote job search. No cloud, no subscriptions — just a SQLite 
+remote job search. No cloud, no subscriptions: just a SQLite 
 file on your machine.
 
 ![Status](https://img.shields.io/badge/Status-Active-brightgreen)
@@ -49,7 +49,7 @@ npm install
 npm run dev
 ```
 
-Frontend runs on `http://localhost:5173` — open it in your browser.
+Frontend runs on `http://localhost:5173`: open it in your browser.
 
 The `tracker.db` file is created automatically on first backend run.
 
